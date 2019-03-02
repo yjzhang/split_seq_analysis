@@ -24,6 +24,7 @@ genes_renamed = np.array([x.split('_')[0] for x in genes_subset])
 
 # save data subset
 from scipy.io import mmwrite
+dge_subset = dge_subset.T
 mmwrite('20181206_SCH_80kcells_novaseq_v2_non_intronic.mtx', dge_subset)
 
 # save gene names
