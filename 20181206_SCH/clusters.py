@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-labels_b = pd.read_csv('../../../80k_cluster_numbers.csv')
+labels_b = pd.read_csv('80k_cluster_numbers.csv')
 labels_b = labels_b.iloc[:,1]
 labels_b = labels_b.values
 labels_b_subset = labels_b[sca.cell_subset]
@@ -41,6 +41,7 @@ plt.savefig('uncurl_vs_seurat_clusters.png', dpi=200)
 cluster_file = pd.read_csv('80k_clustering_master_file - All_Integrated_res1.csv')
 cluster_file = cluster_file.iloc[:,3:]
 cluster_cell_types = [str(i) + ' ' + str(cluster_file[str(i)][0]) for i in range(33)]
+cluster_cell_types.append('33')
 
 plt.figure(figsize=(15, 25))
 sns.heatmap(cluster_counts/cluster_counts.sum(1)[:,np.newaxis],
@@ -51,5 +52,66 @@ plt.ylabel('Seurat clusters')
 plt.title('SCH Cerebellum Clusters')
 plt.savefig('uncurl_vs_seurat_clusters.png', dpi=200)
 
+# do a biclustering
+
+from sklearn.cluster.bicluster import SpectralCoclustering
+
+spec = SpectralCoclustering(20)
+cluster_counts_subset = np.vstack([cluster_counts[:31, :], cluster_counts[32:,:]])
+spec.fit(cluster_counts + 0.0001)
+row_labels = spec.row_labels_
+column_labels = spec.column_labels_
+
+row_order = np.argsort(row_labels)
+col_order = np.argsort(column_labels)
+
+#row_labels = row_labels[row_order]
+#col_labels = column_labels[col_order]
+
+cluster_counts_reordered = cluster_counts[row_order, :]
+cluster_counts_reordered = cluster_counts_reordered[:, col_order]
+cluster_cell_types_2 = np.array([str(x) + ': ' + y for x, y in zip(row_labels, cluster_cell_types)])
+col_labels = np.array([str(x) + ': ' + str(y) for x, y in zip(column_labels, range(len(column_labels)))])
+
+plt.figure(figsize=(20, 25))
+sns.heatmap(cluster_counts_reordered/cluster_counts_reordered.sum(1)[:,np.newaxis],
+            yticklabels=cluster_cell_types_2[row_order],
+            xticklabels=col_labels[col_order],
+            vmin=0, vmax=1, linewidths=0.5)
+plt.xlabel('UNCURL clusters')
+plt.ylabel('Seurat clusters')
+plt.title('SCH Cerebellum Clusters')
+plt.savefig('uncurl_vs_seurat_clusters_coclustering.png', dpi=200)
+
+
+# do a biclustering
+from sklearn.cluster.bicluster import SpectralBiclustering
+
+spec = SpectralBiclustering(20)
+cluster_counts_subset = np.vstack([cluster_counts[:31, :], cluster_counts[32:,:]])
+spec.fit(cluster_counts + 0.0001)
+row_labels = spec.row_labels_
+column_labels = spec.column_labels_
+
+row_order = np.argsort(row_labels)
+col_order = np.argsort(column_labels)
+
+#row_labels = row_labels[row_order]
+#col_labels = column_labels[col_order]
+
+cluster_counts_reordered = cluster_counts[row_order, :]
+cluster_counts_reordered = cluster_counts_reordered[:, col_order]
+cluster_cell_types_2 = np.array([str(x) + ': ' + y for x, y in zip(row_labels, cluster_cell_types)])
+col_labels = np.array([str(x) + ': ' + str(y) for x, y in zip(column_labels, range(len(column_labels)))])
+
+plt.figure(figsize=(20, 25))
+sns.heatmap(cluster_counts_reordered/cluster_counts_reordered.sum(1)[:,np.newaxis],
+            yticklabels=cluster_cell_types_2[row_order],
+            xticklabels=col_labels[col_order],
+            vmin=0, vmax=1, linewidths=0.5)
+plt.xlabel('UNCURL clusters')
+plt.ylabel('Seurat clusters')
+plt.title('SCH Cerebellum Clusters')
+plt.savefig('uncurl_vs_seurat_clusters_biclustering.png', dpi=200)
 
 
