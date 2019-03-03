@@ -56,7 +56,7 @@ plt.savefig('uncurl_vs_seurat_clusters.png', dpi=200)
 
 from sklearn.cluster.bicluster import SpectralCoclustering
 
-spec = SpectralCoclustering(20)
+spec = SpectralCoclustering(18)
 cluster_counts_subset = np.vstack([cluster_counts[:31, :], cluster_counts[32:,:]])
 spec.fit(cluster_counts + 0.0001)
 row_labels = spec.row_labels_
@@ -73,15 +73,25 @@ cluster_counts_reordered = cluster_counts_reordered[:, col_order]
 cluster_cell_types_2 = np.array([str(x) + ': ' + y for x, y in zip(row_labels, cluster_cell_types)])
 col_labels = np.array([str(x) + ': ' + str(y) for x, y in zip(column_labels, range(len(column_labels)))])
 
-plt.figure(figsize=(20, 25))
-sns.heatmap(cluster_counts_reordered/cluster_counts_reordered.sum(1)[:,np.newaxis],
+plt.figure(figsize=(25, 30))
+ax = sns.heatmap(cluster_counts_reordered/cluster_counts_reordered.sum(1)[:,np.newaxis],
             yticklabels=cluster_cell_types_2[row_order],
             xticklabels=col_labels[col_order],
-            vmin=0, vmax=1, linewidths=0.5)
+            vmin=0, vmax=1)
+prev_label = 0
+for i, c in enumerate(row_labels[row_order]):
+    if c != prev_label:
+        ax.axhline(i, linewidth=3)
+        prev_label = c
+prev_label = 0
+for i, c in enumerate(column_labels[col_order]):
+    if c != prev_label:
+        ax.axvline(i, linewidth=3)
+        prev_label = c
 plt.xlabel('UNCURL clusters')
 plt.ylabel('Seurat clusters')
 plt.title('SCH Cerebellum Clusters')
-plt.savefig('uncurl_vs_seurat_clusters_coclustering.png', dpi=200)
+plt.savefig('uncurl_vs_seurat_clusters_coclustering.png', dpi=150)
 
 
 # do a biclustering
